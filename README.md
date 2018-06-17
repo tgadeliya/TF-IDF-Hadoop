@@ -1,7 +1,6 @@
 # TF-IDF-Hadoop
 Realization of TF-IDF algorithm based on MapReduce model
 https://en.wikipedia.org/wiki/Tf%E2%80%93idf</br>
-This Java classes represent realization of TF-IDF algorithm for corpus of documents.
 # Environment for launching HDFS and Hadoop code
 Cloudera Virtual machinegives oportunity to lauch one cluster for hadoop experiments. It uses 4 GB RAM.</br>
 https://www.cloudera.com/downloads.html
