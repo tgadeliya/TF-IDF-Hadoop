@@ -24,7 +24,7 @@ public class Job3_TFIDF extends Configured implements Tool {
 	public static final String Path_in =  "/TF-IDF/j2-output/";
 	public static final String Path_out =  "/TF-IDF/output/";
 	
-	// The same configuration as in Job_2
+	// The same configuration as Job_2
 	@Override
 	public int run(String[] arg) throws Exception {
 		
@@ -54,9 +54,10 @@ public class Job3_TFIDF extends Configured implements Tool {
 		
 		
 	}
-	/*
-	Input <NumLine word#docname n/N
-
+	/* Mapper
+	Input <NumLine, word#docname n/N>
+	Splitting input 
+	Output <word, docname=n/N>
 	*/
 public static class Mapper_J3 extends Mapper<LongWritable, Text, Text, Text>{
 		
@@ -68,32 +69,48 @@ public static class Mapper_J3 extends Mapper<LongWritable, Text, Text, Text>{
 		}
 	}
 	
+	/*Reducer
+	Input: <word, docname=n/N>
+	Output: < word#docname, TF-IDF = tf_idf TF = tf IDF = idf>
+	Final step to count TF-IDF for every word in every document.
+	Additionally passed NumOfDocsInCorp through configuration file. This variable calculated in bash script
+	and passed as argument when job 3 is launched by script
+	*/
 public static class Reducer_J3 extends Reducer<Text, Text, Text, Text> {
 		
 		protected void reduce(Text key, Iterable<Text> values,Context context) throws IOException, InterruptedException{
+		//Number of documents. Contains in Configuration inside context object. 
+		//Passed through -Dreducer.NumF=${NUM} argument in bash launch
+		int NumOfDocsInCorp = Integer.parseInt(context.getConfiguration().get("reducer.numF"));
+		// How many documents contains this word
+		int NumOfDocsKeyAppeared = 0;
+		Map<String, String> docFreq = new HashMap<String, String>();
+		
+		// Iterating over values(docname=n/N).
+		
+		// 
+		for (Text value:values){
+			// On every iteration value is splitted into document name and n/N
+			String[] docname_n = value.toString().split("=");
+			// Incrementation of NumOfDocsKeyAppeared for specific word
+			NumOfDocsKeyAppeared++;
+			// Put into Map<docname, n/N>
+			docFreq.put(docname_n[0], docname_n[1]);
+		}
+		// Iteration over statistics for every word from Map<,>
+		// Writing into context < word#docname, TF-IDF = tf_idf TF = tf IDF = idf>
+		for (String doc :docFreq.keySet()){
 			
-			int NumOfDocsInCorp = Integer.parseInt(context.getConfiguration().get("reducer.numF"));
-			int NumOfDocsKeyAppeared = 0;
-			Map<String, String> docFreq = new HashMap<String, String>();
+			String[] wordFreq_wordSum = docFreq.get(doc).split("/");
+				
+			double tf = Double.valueOf(wordFreq_wordSum[0])/ Double.valueOf(wordFreq_wordSum[1]);
+			double idf = (double) NumOfDocsInCorp / (double) NumOfDocsKeyAppeared ;
+			double tf_idf = (int) NumOfDocsInCorp == (int) NumOfDocsKeyAppeared ? tf : tf * Math.log10(idf);
 			
-			for (Text value:values){
-				String[] docname_n = value.toString().split("=");
-				NumOfDocsKeyAppeared++;
-				docFreq.put(docname_n[0], docname_n[1]);
-			}
-			for (String doc :docFreq.keySet()){
-				String[] wordFreq_wordSum = docFreq.get(doc).split("/");
+			context.write(new Text(key +"#"+doc),new Text("TF-IDF = "+String.valueOf(tf_idf)+
+					", TF="+String.valueOf(tf)+", IDF="+String.valueOf(idf) ));
 				
-				double tf = Double.valueOf(wordFreq_wordSum[0])/ Double.valueOf(wordFreq_wordSum[1]);
-				
-				double idf = (double) NumOfDocsInCorp / (double) NumOfDocsKeyAppeared ;
-				
-				double tf_idf = (int) NumOfDocsInCorp == (int) NumOfDocsKeyAppeared ? tf : tf * Math.log10(idf);
-				
-				context.write(new Text(key +"#"+doc),new Text("TF-IDF = "+String.valueOf(tf_idf)+
-						", TF="+String.valueOf(tf)+", IDF="+String.valueOf(idf) ));
-				
-			}
+		}
 			
 		}
 	}		
