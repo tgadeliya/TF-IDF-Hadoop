@@ -5,7 +5,7 @@ https://en.wikipedia.org/wiki/Tf%E2%80%93idf</br>
 Cloudera Virtual machine gives opportunity to lauch one cluster for hadoop experiments. It uses 4 GB RAM.</br>
 https://www.cloudera.com/downloads.html
 # Bash Script description
-Bash script used for Job chaining. As long as chaining doesn't require complex actions, bash script launches one-by-one jobs and copying files from Local FS(File System) to HDFS and vice versa. Every Java class with Job, Mapper, Reducer realization is packed into JAR and storaged in Local FS /home/cloudera/TFIDF/.
+Bash script used for Job chaining. As long as chaining doesn't require complex actions, this is a good choice to chain this jobs. Bash script launches one-by-one jobs and copying files from Local FS(File System) to HDFS and vice versa. Every Java class with Job, Mapper, Reducer realization is packed into JAR and storaged in Local FS /home/cloudera/TFIDF/. Moreover, after every Job execution script deletes input for that Job.
 # Description of the process
 1) User launch TF-IDF.sh bash script with two arguments. First argument define location of the input folder on local disk and the second argument local disk output folder, where final results will be copied after execution of algorithm.
 
